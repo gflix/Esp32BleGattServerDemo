@@ -20,7 +20,7 @@ NonVolatileStorage::~NonVolatileStorage()
 
 void NonVolatileStorage::probe(void)
 {
-    ESP_LOGI(LOG_TAG, "NonVolatileStorage::probe()");
+    ESP_LOGD(LOG_TAG, "NonVolatileStorage::probe()");
 
     auto returnCode = nvs_flash_init();
     if (returnCode == ESP_ERR_NVS_NO_FREE_PAGES ||
