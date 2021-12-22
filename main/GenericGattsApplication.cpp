@@ -23,7 +23,7 @@ static uint8_t rawAdvertisingData[] = {
         /* service uuid */
         0x03, 0x03, 0xFF, 0x00,
         /* device name */
-        0x0f, 0x09, 'E', 'S', 'P', '-', 'G', 'A', 'T', 'T'
+        0x06, 0x09, 'E', 'S', 'P', '3', '2'
 };
 
 static uint8_t rawScanResponseData[] = {
