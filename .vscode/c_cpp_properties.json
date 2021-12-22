@@ -3,7 +3,8 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
+                "${workspaceFolder}/build/config/**",
+                "${workspaceFolder}/main/**",
                 "${IDF_PATH}/components/**"
             ],
             "defines": [],
