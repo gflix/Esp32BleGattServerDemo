@@ -21,7 +21,7 @@ static uint8_t rawAdvertisingData[] = {
         /* tx power*/
         0x02, 0x0a, 0xeb,
         /* service uuid */
-        0x03, 0x03, 0xFF, 0x00,
+        0x03, 0x03, 0x1c, 0x18,
         /* device name */
         0x06, 0x09, 'E', 'S', 'P', '3', '2'
 };
@@ -32,7 +32,7 @@ static uint8_t rawScanResponseData[] = {
         /* tx power */
         0x02, 0x0a, 0xeb,
         /* service uuid */
-        0x03, 0x03, 0xFF, 0x00
+        0x03, 0x03, 0x1c, 0x18,
 };
 
 static esp_ble_adv_params_t advertisingParameters = {
