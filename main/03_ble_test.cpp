@@ -2,9 +2,12 @@
 #include <esp_log.h>
 #include <stdexcept>
 #include "BleServer.hpp"
+#include "ExampleGattsApplication.hpp"
 #include "NonVolatileStorage.hpp"
 
 #define LOG_TAG "Main"
+
+static Esp32::ExampleGattsApplication gattsApplication;
 
 extern "C" {
 
@@ -19,11 +22,13 @@ void app_main(void)
         ESP_LOGI(LOG_TAG, "NonVolatileStorage: probing done");
         Esp32::BleServer::instance()->probe();
         ESP_LOGI(LOG_TAG, "BleServer: probing done");
+        Esp32::BleServer::instance()->setGattsApplication(&gattsApplication);
+        ESP_LOGI(LOG_TAG, "BleServer: GATTS application successfully set");
     }
     catch(const std::exception& e)
     {
         ESP_LOGE(LOG_TAG, "Caught exception: %s\n", e.what());
-    }    
+    }
 }
 
 }
