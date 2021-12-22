@@ -19,6 +19,14 @@ public:
     void gapEventCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t* param);
     void gattsEventCallback(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
 
+    static const uint16_t primary_service_uuid;
+    static const uint16_t character_declaration_uuid;
+    static const uint16_t character_client_config_uuid;
+    static const uint16_t character_description_uuid;
+    static const uint8_t char_prop_read;
+    static const uint8_t char_prop_write;
+    static const uint8_t char_prop_read_write_notify;
+
 protected:
 
     uint16_t m_applicationId;
@@ -31,9 +39,15 @@ protected:
     void handleGapEventUpdatedConnectionParameters(esp_ble_gap_cb_param_t* param);
 
     void handleGattsEventConnect(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
+    void handleGattsEventCreateAttributeTable(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
     void handleGattsEventDisconnect(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
     void handleGattsEventMtu(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
-    void handleGattsEventRegister();
+    void handleGattsEventRegister(esp_gatt_if_t gatts_if);
+    void handleGattsEventWrite(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
+
+    virtual void registerAttibuteTable(esp_gatt_if_t gatts_if) = 0;
+    virtual void startService(esp_ble_gatts_cb_param_t* param) = 0;
+    virtual void writeAttribute(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param) = 0;
 
     void setConfigurationAdvertisingPendingFlag(void);
     void setConfigurationAdvertisingDoneFlag(void);

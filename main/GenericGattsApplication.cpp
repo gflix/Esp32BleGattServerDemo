@@ -1,11 +1,13 @@
 #include <string.h>
 #include <esp_log.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include <stdexcept>
 #include "GenericGattsApplication.hpp"
 
 #define LOG_TAG "GenericGattsApplication"
 
-#define BLE_EXAMPLE_DEVICE_NAME "ESP_GATT"
+#define BLE_EXAMPLE_DEVICE_NAME "ESP-GATT"
 
 #define CONFIGURATION_ADVERTISING_PENDING (1 << 0)
 #define CONFIGURATION_SCAN_RESPONSE_PENDING (1 << 1)
@@ -21,7 +23,7 @@ static uint8_t rawAdvertisingData[] = {
         /* service uuid */
         0x03, 0x03, 0xFF, 0x00,
         /* device name */
-        0x0f, 0x09, 'E', 'S', 'P', '_', 'G', 'A', 'T', 'T'
+        0x0f, 0x09, 'E', 'S', 'P', '-', 'G', 'A', 'T', 'T'
 };
 
 static uint8_t rawScanResponseData[] = {
@@ -42,6 +44,14 @@ static esp_ble_adv_params_t advertisingParameters = {
     .channel_map         = ADV_CHNL_ALL,
     .adv_filter_policy   = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY,
 };
+
+const uint16_t GenericGattsApplication::primary_service_uuid         = ESP_GATT_UUID_PRI_SERVICE;
+const uint16_t GenericGattsApplication::character_declaration_uuid   = ESP_GATT_UUID_CHAR_DECLARE;
+const uint16_t GenericGattsApplication::character_client_config_uuid = ESP_GATT_UUID_CHAR_CLIENT_CONFIG;
+const uint16_t GenericGattsApplication::character_description_uuid = ESP_GATT_UUID_CHAR_DESCRIPTION;
+const uint8_t GenericGattsApplication::char_prop_read              =  ESP_GATT_CHAR_PROP_BIT_READ;
+const uint8_t GenericGattsApplication::char_prop_write             = ESP_GATT_CHAR_PROP_BIT_WRITE;
+const uint8_t GenericGattsApplication::char_prop_read_write_notify = ESP_GATT_CHAR_PROP_BIT_WRITE | ESP_GATT_CHAR_PROP_BIT_READ | ESP_GATT_CHAR_PROP_BIT_NOTIFY;
 
 GenericGattsApplication::GenericGattsApplication(uint16_t applicationId):
     m_applicationId(applicationId),
@@ -111,16 +121,42 @@ void GenericGattsApplication::gattsEventCallback(
     switch (event)
     {
         case ESP_GATTS_REG_EVT:
-            handleGattsEventRegister();
+            handleGattsEventRegister(gatts_if);
+            break;
+        case ESP_GATTS_READ_EVT:
+            ESP_LOGI(LOG_TAG, "READ need_rsp=%d, handle=%d", (int)param->read.need_rsp, param->read.handle);
+            if (param->read.need_rsp)
+            {
+                esp_gatt_rsp_t rsp;
+            bzero(&rsp, sizeof(rsp));
+            auto uptime = xTaskGetTickCount();
+            rsp.attr_value.handle = param->read.handle;
+            rsp.attr_value.len = sizeof(uptime);
+            memcpy(rsp.attr_value.value, &uptime, sizeof(uptime));
+            esp_ble_gatts_send_response(gatts_if, param->read.conn_id, param->read.trans_id,
+                                        ESP_GATT_OK, &rsp);
+            }
+            break;
+        case ESP_GATTS_WRITE_EVT:
+            handleGattsEventWrite(gatts_if, param);
             break;
         case ESP_GATTS_MTU_EVT:
             handleGattsEventMtu(gatts_if, param);
+            break;
+        case ESP_GATTS_START_EVT:
+            ESP_LOGI(LOG_TAG, "SERVICE STARTED");
             break;
         case ESP_GATTS_CONNECT_EVT:
             handleGattsEventConnect(gatts_if, param);
             break;
         case ESP_GATTS_DISCONNECT_EVT:
             handleGattsEventDisconnect(gatts_if, param);
+            break;
+        case ESP_GATTS_RESPONSE_EVT:
+            ESP_LOGI(LOG_TAG, "RESPONSE COMPLETED");
+            break;
+        case ESP_GATTS_CREAT_ATTR_TAB_EVT:
+            handleGattsEventCreateAttributeTable(gatts_if, param);
             break;
         default:
             ESP_LOGI(
@@ -208,6 +244,18 @@ void GenericGattsApplication::handleGattsEventConnect(esp_gatt_if_t gatts_if, es
     }
 }
 
+void GenericGattsApplication::handleGattsEventCreateAttributeTable(
+    esp_gatt_if_t gatts_if,
+    esp_ble_gatts_cb_param_t* param)
+{
+    if (param->add_attr_tab.status != ESP_GATT_OK)
+    {
+        throw std::runtime_error("error creating the GATT attribute table");
+    }
+
+    startService(param);
+}
+
 void GenericGattsApplication::handleGattsEventDisconnect(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param)
 {
     ESP_LOGI(
@@ -237,7 +285,7 @@ void GenericGattsApplication::handleGattsEventMtu(esp_gatt_if_t gatts_if, esp_bl
     ESP_LOGI(LOG_TAG, "MTU, conn_id=%d, mtu=%d", param->mtu.conn_id, param->mtu.mtu);
 }
 
-void GenericGattsApplication::handleGattsEventRegister(void)
+void GenericGattsApplication::handleGattsEventRegister(esp_gatt_if_t gatts_if)
 {
     if (esp_ble_gap_set_device_name(BLE_EXAMPLE_DEVICE_NAME) != ESP_OK)
     {
@@ -256,7 +304,19 @@ void GenericGattsApplication::handleGattsEventRegister(void)
     }
     setConfigurationScanResponsePendingFlag();
 
-    // TODO register table
+    registerAttibuteTable(gatts_if);
+}
+
+void GenericGattsApplication::handleGattsEventWrite(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param)
+{
+    if (!param->write.is_prep)
+    {
+        writeAttribute(gatts_if, param);
+    }
+
+    if (param->write.need_rsp){
+        esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, ESP_GATT_OK, NULL);
+    }
 }
 
 void GenericGattsApplication::setConfigurationAdvertisingPendingFlag(void)
