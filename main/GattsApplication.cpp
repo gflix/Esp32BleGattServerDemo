@@ -82,7 +82,8 @@ GattsApplication::GattsApplication(
     m_nextServiceForRegistration(nullptr),
     m_nextServiceRegistrationNumber(0),
     m_configurationDone(0),
-    m_interface(ESP_GATT_IF_NONE)
+    m_interface(ESP_GATT_IF_NONE),
+    m_dummyValue(0)
 {
 }
 
@@ -179,20 +180,9 @@ void GattsApplication::gattsEventCallback(
         case ESP_GATTS_REG_EVT:
             handleGattsEventRegister(gatts_if);
             break;
-        // case ESP_GATTS_READ_EVT:
-        //     ESP_LOGI(LOG_TAG, "READ need_rsp=%d, handle=%d", (int)param->read.need_rsp, param->read.handle);
-        //     if (param->read.need_rsp)
-        //     {
-        //         esp_gatt_rsp_t rsp;
-        //     bzero(&rsp, sizeof(rsp));
-        //     auto uptime = xTaskGetTickCount();
-        //     rsp.attr_value.handle = param->read.handle;
-        //     rsp.attr_value.len = sizeof(uptime);
-        //     memcpy(rsp.attr_value.value, &uptime, sizeof(uptime));
-        //     esp_ble_gatts_send_response(gatts_if, param->read.conn_id, param->read.trans_id,
-        //                                 ESP_GATT_OK, &rsp);
-        //     }
-        //     break;
+        case ESP_GATTS_READ_EVT:
+            handleGattsEventRead(gatts_if, param);
+            break;
         // case ESP_GATTS_WRITE_EVT:
         //     handleGattsEventWrite(gatts_if, param);
         //     break;
@@ -200,7 +190,7 @@ void GattsApplication::gattsEventCallback(
             handleGattsEventMtu(gatts_if, param);
             break;
         case ESP_GATTS_START_EVT:
-            ESP_LOGI(LOG_TAG, "SERVICE STARTED");
+            ESP_LOGD(LOG_TAG, "GATTS event: service started");
             break;
         case ESP_GATTS_CONNECT_EVT:
             handleGattsEventConnect(gatts_if, param);
@@ -208,9 +198,9 @@ void GattsApplication::gattsEventCallback(
         case ESP_GATTS_DISCONNECT_EVT:
             handleGattsEventDisconnect(gatts_if, param);
             break;
-        // case ESP_GATTS_RESPONSE_EVT:
-        //     ESP_LOGI(LOG_TAG, "RESPONSE COMPLETED");
-        //     break;
+        case ESP_GATTS_RESPONSE_EVT:
+            ESP_LOGD(LOG_TAG, "GATTS event: response completed");
+            break;
         case ESP_GATTS_CREAT_ATTR_TAB_EVT:
             handleGattsEventCreateAttributeTable(gatts_if, param);
             break;
@@ -344,6 +334,67 @@ void GattsApplication::handleGattsEventDisconnect(esp_gatt_if_t gatts_if, esp_bl
 void GattsApplication::handleGattsEventMtu(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param)
 {
     ESP_LOGI(LOG_TAG, "MTU, conn_id=%d, mtu=%d", param->mtu.conn_id, param->mtu.mtu);
+}
+
+void GattsApplication::handleGattsEventRead(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param)
+{
+    ESP_LOGI(LOG_TAG, "READ need_rsp=%d, handle=%04x", (int)param->read.need_rsp, param->read.handle);
+    if (param->read.need_rsp)
+    {
+        esp_gatt_rsp_t response;
+        bzero(&response, sizeof(response));
+        response.attr_value.handle = param->read.handle;
+
+        try
+        {
+            auto servicePointer = m_services;
+            while (servicePointer)
+            {
+                if (servicePointer->service->hasHandle(param->read.handle))
+                {
+                    servicePointer->service->readCharacteristic(
+                        param->read.handle,
+                        response.attr_value.value,
+                        response.attr_value.len);
+
+                    response.attr_value.len = sizeof(m_dummyValue);
+                    memcpy(response.attr_value.value, &m_dummyValue, sizeof(m_dummyValue));
+
+                    esp_ble_gatts_send_response(
+                        gatts_if,
+                        param->read.conn_id,
+                        param->read.trans_id,
+                        ESP_GATT_OK,
+                        &response);
+                    break;
+                }
+
+                servicePointer = servicePointer->next;
+            }
+            if (!servicePointer)
+            {
+                ESP_LOGW(LOG_TAG, "Could not find suitable service for handle %04x", param->read.handle);
+                esp_ble_gatts_send_response(
+                    gatts_if,
+                    param->read.conn_id,
+                    param->read.trans_id,
+                    ESP_GATT_INVALID_HANDLE,
+                    &response);
+            }
+        }
+        catch(const std::exception& e)
+        {
+            ESP_LOGW(LOG_TAG, "Could not respond to read request: %s", e.what());
+            esp_ble_gatts_send_response(
+                gatts_if,
+                param->read.conn_id,
+                param->read.trans_id,
+                ESP_GATT_INTERNAL_ERROR,
+                &response);
+        }
+
+        ++m_dummyValue;
+    }
 }
 
 void GattsApplication::handleGattsEventRegister(esp_gatt_if_t gatts_if)

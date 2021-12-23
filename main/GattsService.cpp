@@ -71,6 +71,13 @@ void GattsService::addCharacteristic(GenericGattCharacteristic* characteristic)
     }
 }
 
+void GattsService::readCharacteristic(uint16_t handle, uint8_t* buffer, uint16_t length)
+{
+    auto characteristic = getCharacteristicForHandle(handle);
+
+    ESP_LOGI(LOG_TAG, "reading from characteristic %04x", characteristic->characteristicId());
+}
+
 void GattsService::pushHandles(const uint16_t* handles)
 {
     if (!handles || !m_attributeTable.table)
@@ -85,6 +92,23 @@ void GattsService::pushHandles(const uint16_t* handles)
 
     m_characteristicHandles = (uint16_t*) malloc(m_attributeTable.length * sizeof(uint16_t));
     memcpy(m_characteristicHandles, handles, m_attributeTable.length * sizeof(uint16_t));
+}
+
+bool GattsService::hasHandle(uint16_t handle)
+{
+    if (!m_characteristicHandles)
+    {
+        return false;
+    }
+
+    for (auto i = 0; i < m_attributeTable.length; ++i)
+    {
+        if (m_characteristicHandles[i] == handle)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 void GattsService::generateAttributeTable(void)
@@ -151,6 +175,7 @@ void GattsService::generateAttributeTable(void)
             sizeof(m_dummyByte),
             (uint8_t*) &m_dummyByte
         };
+        characteristicPointer->characteristic->setHandleIndex(tablePointer - m_attributeTable.table);
 
         auto description = characteristicPointer->characteristic->description();
         if (description)
@@ -169,6 +194,34 @@ void GattsService::generateAttributeTable(void)
 
         characteristicPointer = characteristicPointer->next;
     }
+}
+
+GenericGattCharacteristic* GattsService::getCharacteristicForHandle(uint16_t handle)
+{
+    if (!m_characteristicHandles)
+    {
+        throw std::runtime_error("no handles initialized yet");
+    }
+
+    for (auto i = 0; i < m_attributeTable.length; ++i)
+    {
+        if (m_characteristicHandles[i] == handle)
+        {
+            auto characteristicPointer = m_characteristics;
+
+            while (characteristicPointer)
+            {
+                if (characteristicPointer->characteristic->handleIndex() == i)
+                {
+                    return characteristicPointer->characteristic;
+                }
+
+                characteristicPointer = characteristicPointer->next;
+            }
+            throw std::runtime_error("requested characteristic not found");
+        }
+    }
+    throw std::runtime_error("requested handle not found");
 }
 
 } /* namespace Esp32 */

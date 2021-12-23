@@ -19,11 +19,16 @@ public:
     const uint16_t& permission(void) const;
     const char* description(void) const;
 
+    void setHandleIndex(int handleIndex);
+    int handleIndex(void) const;
+
 protected:
 
     uint16_t m_characteristicId;
     uint16_t m_permission;
     const char* m_description;
+
+    int m_handleIndex;
 
 private:
 

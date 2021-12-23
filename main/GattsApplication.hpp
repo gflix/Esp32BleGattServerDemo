@@ -65,6 +65,8 @@ protected:
     AdvertisementData m_rawAdvertisementData;
     AdvertisementData m_rawScanResponseData;
 
+    uint8_t m_dummyValue;
+
     void handleGapEventAdvertisementDataSetComplete(void);
     void handleGapEventScanResponseDataSetComplete(void);
     void handleGapEventAdvertisementStartComplete(esp_ble_gap_cb_param_t* param);
@@ -74,6 +76,7 @@ protected:
     void handleGattsEventCreateAttributeTable(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
     void handleGattsEventDisconnect(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
     void handleGattsEventMtu(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
+    void handleGattsEventRead(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
     void handleGattsEventRegister(esp_gatt_if_t gatts_if);
 
     void generateRawAdvertisementData(void);

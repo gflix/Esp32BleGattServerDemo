@@ -33,7 +33,9 @@ public:
     const AttributeTable& attributeTable(void);
 
     void addCharacteristic(GenericGattCharacteristic* characteristic);
+    void readCharacteristic(uint16_t handle, uint8_t* buffer, uint16_t length);
     void pushHandles(const uint16_t* handles);
+    bool hasHandle(uint16_t handle);
 
     static const uint16_t primaryServiceUuid;
     static const uint16_t characterDeclarationUuid;
@@ -51,6 +53,7 @@ protected:
     uint8_t m_dummyByte;
 
     void generateAttributeTable(void);
+    GenericGattCharacteristic* getCharacteristicForHandle(uint16_t handle);
 
 private:
 

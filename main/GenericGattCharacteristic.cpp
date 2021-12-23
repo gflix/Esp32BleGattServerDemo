@@ -9,7 +9,8 @@ GenericGattCharacteristic::GenericGattCharacteristic(
     const char* description):
     m_characteristicId(characteristicId),
     m_permission(permission),
-    m_description(description)
+    m_description(description),
+    m_handleIndex(-1)
 {
 }
 
@@ -30,6 +31,16 @@ const uint16_t& GenericGattCharacteristic::permission(void) const
 const char* GenericGattCharacteristic::description(void) const
 {
     return m_description;
+}
+
+void GenericGattCharacteristic::setHandleIndex(int handleIndex)
+{
+    m_handleIndex = handleIndex;
+}
+
+int GenericGattCharacteristic::handleIndex(void) const
+{
+    return m_handleIndex;
 }
 
 } /* namespace Esp32 */
