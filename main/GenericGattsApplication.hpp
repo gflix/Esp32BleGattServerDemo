@@ -46,7 +46,7 @@ protected:
     void handleGattsEventWrite(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
 
     virtual void registerAttibuteTable(esp_gatt_if_t gatts_if) = 0;
-    virtual void startService(esp_ble_gatts_cb_param_t* param) = 0;
+    virtual void startService(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param) = 0;
     virtual void writeAttribute(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param) = 0;
 
     void setConfigurationAdvertisingPendingFlag(void);
