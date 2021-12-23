@@ -2,12 +2,14 @@
 #include <esp_log.h>
 #include <stdexcept>
 #include "BleServer.hpp"
-#include "ExampleGattsApplication.hpp"
+#include "GattsApplication.hpp"
 #include "NonVolatileStorage.hpp"
 
 #define LOG_TAG "Main"
 
-static Esp32::ExampleGattsApplication gattsApplication;
+#define GATTS_APPLICATION_ID (0x2104)
+
+static Esp32::GattsApplication gattsApplication(GATTS_APPLICATION_ID, "ESP32");
 
 extern "C" {
 
