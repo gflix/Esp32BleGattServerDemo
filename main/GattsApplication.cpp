@@ -99,9 +99,9 @@ void GattsApplication::gapEventCallback(esp_gap_ble_cb_event_t event, esp_ble_ga
         case ESP_GAP_BLE_ADV_START_COMPLETE_EVT:
             handleGapEventAdvertisementStartComplete(param);
             break;
-        // case ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT:
-        //     handleGapEventUpdatedConnectionParameters(param);
-        //     break;
+        case ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT:
+            handleGapEventUpdatedConnectionParameters(param);
+            break;
         default:
             ESP_LOGI(LOG_TAG, "gapEventCallback(event=%d)", (int)event);
             throw std::runtime_error("not yet implemented");
@@ -152,18 +152,18 @@ void GattsApplication::gattsEventCallback(
         // case ESP_GATTS_WRITE_EVT:
         //     handleGattsEventWrite(gatts_if, param);
         //     break;
-        // case ESP_GATTS_MTU_EVT:
-        //     handleGattsEventMtu(gatts_if, param);
-        //     break;
+        case ESP_GATTS_MTU_EVT:
+            handleGattsEventMtu(gatts_if, param);
+            break;
         // case ESP_GATTS_START_EVT:
         //     ESP_LOGI(LOG_TAG, "SERVICE STARTED");
         //     break;
-        // case ESP_GATTS_CONNECT_EVT:
-        //     handleGattsEventConnect(gatts_if, param);
-        //     break;
-        // case ESP_GATTS_DISCONNECT_EVT:
-        //     handleGattsEventDisconnect(gatts_if, param);
-        //     break;
+        case ESP_GATTS_CONNECT_EVT:
+            handleGattsEventConnect(gatts_if, param);
+            break;
+        case ESP_GATTS_DISCONNECT_EVT:
+            handleGattsEventDisconnect(gatts_if, param);
+            break;
         // case ESP_GATTS_RESPONSE_EVT:
         //     ESP_LOGI(LOG_TAG, "RESPONSE COMPLETED");
         //     break;
@@ -204,6 +204,76 @@ void GattsApplication::handleGapEventAdvertisementStartComplete(esp_ble_gap_cb_p
     {
         ESP_LOGE(LOG_TAG, "error starting advertising");
     }
+}
+
+void GattsApplication::handleGapEventUpdatedConnectionParameters(esp_ble_gap_cb_param_t* param)
+{
+    ESP_LOGI(
+        LOG_TAG,
+        "UPDATED CONN PARAMS, status=%d, min_int=%d, max_int=%d, conn_int=%d, latency=%d, timeout=%d",
+        param->update_conn_params.status,
+        (param->update_conn_params.min_int * 125) / 100,
+        (param->update_conn_params.max_int * 125) / 100,
+        param->update_conn_params.conn_int,
+        param->update_conn_params.latency,
+        param->update_conn_params.timeout * 10);
+}
+
+void GattsApplication::handleGattsEventConnect(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param)
+{
+    ESP_LOGI(
+        LOG_TAG,
+        "CONNECT, conn_id=%d, address=%02x:%02x:%02x:%02x:%02x:%02x",
+        param->connect.conn_id,
+        param->connect.remote_bda[0],
+        param->connect.remote_bda[1],
+        param->connect.remote_bda[2],
+        param->connect.remote_bda[3],
+        param->connect.remote_bda[4],
+        param->connect.remote_bda[5]);
+
+    esp_ble_conn_update_params_t connectionParameters;
+    bzero(&connectionParameters, sizeof(connectionParameters));
+    memcpy(connectionParameters.bda, param->connect.remote_bda, sizeof(esp_bd_addr_t));
+    /* For the iOS system, please refer to Apple official documents about the BLE connection parameters restrictions. */
+    connectionParameters.latency = 0;
+    connectionParameters.min_int = 0x10;    // min_int = 0x10*1.25ms = 20ms
+    connectionParameters.max_int = 0x20;    // max_int = 0x20*1.25ms = 40ms
+    connectionParameters.timeout = 400;    // timeout = 400*10ms = 4000ms
+
+    if (esp_ble_gap_update_conn_params(&connectionParameters) != ESP_OK)
+    {
+        ESP_LOGW(LOG_TAG, "Could not update connection parameters! Skipping.");
+    }
+}
+
+void GattsApplication::handleGattsEventDisconnect(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param)
+{
+    ESP_LOGI(
+        LOG_TAG,
+        "DISCONNECT, conn_id=%d, address=%02x:%02x:%02x:%02x:%02x:%02x, reason=0x%04x",
+        param->disconnect.conn_id,
+        param->disconnect.remote_bda[0],
+        param->disconnect.remote_bda[1],
+        param->disconnect.remote_bda[2],
+        param->disconnect.remote_bda[3],
+        param->disconnect.remote_bda[4],
+        param->disconnect.remote_bda[5],
+        param->disconnect.reason);
+
+    if (configurationDone())
+    {
+        esp_ble_gap_start_advertising(&advertisementParameters);
+    }
+    else
+    {
+        ESP_LOGW(LOG_TAG, "not starting advertising again. Configuration not yet completed");
+    }
+}
+
+void GattsApplication::handleGattsEventMtu(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param)
+{
+    ESP_LOGI(LOG_TAG, "MTU, conn_id=%d, mtu=%d", param->mtu.conn_id, param->mtu.mtu);
 }
 
 void GattsApplication::handleGattsEventRegister(esp_gatt_if_t gatts_if)
