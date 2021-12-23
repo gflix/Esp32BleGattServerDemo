@@ -8,8 +8,13 @@
 #define LOG_TAG "Main"
 
 #define GATTS_APPLICATION_ID (0x2104)
+#define GATTS_DEVICE_APPEARANCE (0x0280)
 
-static Esp32::GattsApplication gattsApplication(GATTS_APPLICATION_ID, "ESP32");
+static Esp32::GattsApplication gattsApplication(
+    GATTS_APPLICATION_ID,
+    "ESP32",
+    "ESP32-GATT-Demo",
+    GATTS_DEVICE_APPEARANCE);
 
 extern "C" {
 
