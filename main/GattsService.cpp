@@ -12,6 +12,9 @@ const uint16_t GattsService::primaryServiceUuid = ESP_GATT_UUID_PRI_SERVICE;
 const uint16_t GattsService::characterDeclarationUuid = ESP_GATT_UUID_CHAR_DECLARE;
 const uint16_t GattsService::characterDescriptionUuid = ESP_GATT_UUID_CHAR_DESCRIPTION;
 const uint8_t GattsService::characteristicPropertyRead = ESP_GATT_CHAR_PROP_BIT_READ;
+const uint8_t GattsService::characteristicPropertyReadWrite =
+    ESP_GATT_CHAR_PROP_BIT_READ | ESP_GATT_CHAR_PROP_BIT_WRITE;
+const uint8_t GattsService::characteristicPropertyWrite = ESP_GATT_CHAR_PROP_BIT_WRITE;
 
 GattsService::CharacteristicList::CharacteristicList(GenericGattCharacteristic* characteristic):
     characteristic(characteristic),
@@ -154,15 +157,18 @@ void GattsService::generateAttributeTable(void)
     characteristicPointer = m_characteristics;
     while (characteristicPointer)
     {
+        auto permission = characteristicPointer->characteristic->permission();
+        auto characteristicProperty = permissionBitmaskToCharacteristicProperty(permission);
+
         ++tablePointer;
         tablePointer->attr_control = { ESP_GATT_AUTO_RSP };
         tablePointer->att_desc = {
             ESP_UUID_LEN_16,
             (uint8_t *)&GattsService::characterDeclarationUuid,
             ESP_GATT_PERM_READ,
-            sizeof(characteristicPropertyRead),
-            sizeof(characteristicPropertyRead),
-            (uint8_t*) &characteristicPropertyRead
+            sizeof(characteristicProperty),
+            sizeof(characteristicProperty),
+            (uint8_t*) characteristicProperty
         };
 
         ++tablePointer;
@@ -170,7 +176,7 @@ void GattsService::generateAttributeTable(void)
         tablePointer->att_desc = {
             ESP_UUID_LEN_16,
             (uint8_t *)&characteristicPointer->characteristic->characteristicId(),
-            ESP_GATT_PERM_READ,
+            permission,
             sizeof(m_dummyByte),
             sizeof(m_dummyByte),
             (uint8_t*) &m_dummyByte
@@ -222,6 +228,22 @@ GenericGattCharacteristic* GattsService::getCharacteristicForHandle(uint16_t han
         }
     }
     throw std::runtime_error("requested handle not found");
+}
+
+const uint8_t* GattsService::permissionBitmaskToCharacteristicProperty(uint8_t permission)
+{
+    switch (permission)
+    {
+        case ESP_GATT_PERM_READ:
+            return &characteristicPropertyRead;
+        case ESP_GATT_PERM_WRITE:
+            return &characteristicPropertyWrite;
+        case ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE:
+            return &characteristicPropertyReadWrite;
+        default:
+            break;
+    }
+    throw std::invalid_argument("unsupported permission");
 }
 
 } /* namespace Esp32 */

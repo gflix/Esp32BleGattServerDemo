@@ -41,6 +41,8 @@ public:
     static const uint16_t characterDeclarationUuid;
     static const uint16_t characterDescriptionUuid;
     static const uint8_t characteristicPropertyRead;
+    static const uint8_t characteristicPropertyReadWrite;
+    static const uint8_t characteristicPropertyWrite;
 
 protected:
 
@@ -54,6 +56,7 @@ protected:
 
     void generateAttributeTable(void);
     GenericGattCharacteristic* getCharacteristicForHandle(uint16_t handle);
+    const uint8_t* permissionBitmaskToCharacteristicProperty(uint8_t permission);
 
 private:
 
