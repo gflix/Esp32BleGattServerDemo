@@ -9,16 +9,21 @@ namespace Esp32
 class GenericGattCharacteristic
 {
 public:
-    GenericGattCharacteristic(uint16_t characteristicId, uint16_t permission = ESP_GATT_PERM_READ);
+    GenericGattCharacteristic(
+        uint16_t characteristicId,
+        uint16_t permission = ESP_GATT_PERM_READ,
+        const char* description = nullptr);
     virtual ~GenericGattCharacteristic();
 
     const uint16_t& characteristicId(void) const;
     const uint16_t& permission(void) const;
+    const char* description(void) const;
 
 protected:
 
     uint16_t m_characteristicId;
     uint16_t m_permission;
+    const char* m_description;
 
 private:
 
