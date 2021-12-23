@@ -57,6 +57,8 @@ protected:
     uint16_t m_appearance;
 
     ServiceList* m_services;
+    ServiceList* m_nextServiceForRegistration;
+    uint8_t m_nextServiceRegistrationNumber;
 
     uint8_t m_configurationDone;
     esp_gatt_if_t m_interface;
@@ -69,12 +71,15 @@ protected:
     void handleGapEventUpdatedConnectionParameters(esp_ble_gap_cb_param_t* param);
 
     void handleGattsEventConnect(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
+    void handleGattsEventCreateAttributeTable(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
     void handleGattsEventDisconnect(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
     void handleGattsEventMtu(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
     void handleGattsEventRegister(esp_gatt_if_t gatts_if);
 
     void generateRawAdvertisementData(void);
     void generateRawScanResponseData(void);
+
+    void registerNextService(esp_gatt_if_t gatts_if);
 
     void setConfigurationAdvertisementPendingFlag(void);
     void setConfigurationAdvertisementDoneFlag(void);

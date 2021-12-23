@@ -78,6 +78,9 @@ GattsApplication::GattsApplication(
     m_shortDeviceName(shortDeviceName),
     m_fullDeviceName(fullDeviceName),
     m_appearance(appearance),
+    m_services(nullptr),
+    m_nextServiceForRegistration(nullptr),
+    m_nextServiceRegistrationNumber(0),
     m_configurationDone(0),
     m_interface(ESP_GATT_IF_NONE)
 {
@@ -196,9 +199,9 @@ void GattsApplication::gattsEventCallback(
         case ESP_GATTS_MTU_EVT:
             handleGattsEventMtu(gatts_if, param);
             break;
-        // case ESP_GATTS_START_EVT:
-        //     ESP_LOGI(LOG_TAG, "SERVICE STARTED");
-        //     break;
+        case ESP_GATTS_START_EVT:
+            ESP_LOGI(LOG_TAG, "SERVICE STARTED");
+            break;
         case ESP_GATTS_CONNECT_EVT:
             handleGattsEventConnect(gatts_if, param);
             break;
@@ -208,9 +211,9 @@ void GattsApplication::gattsEventCallback(
         // case ESP_GATTS_RESPONSE_EVT:
         //     ESP_LOGI(LOG_TAG, "RESPONSE COMPLETED");
         //     break;
-        // case ESP_GATTS_CREAT_ATTR_TAB_EVT:
-        //     handleGattsEventCreateAttributeTable(gatts_if, param);
-        //     break;
+        case ESP_GATTS_CREAT_ATTR_TAB_EVT:
+            handleGattsEventCreateAttributeTable(gatts_if, param);
+            break;
         default:
             ESP_LOGI(LOG_TAG, "gattsEventCallback(event=%d,gatts_if=%d)", (int)event, (int)gatts_if);
             throw std::runtime_error("not yet implemented");
@@ -288,6 +291,32 @@ void GattsApplication::handleGattsEventConnect(esp_gatt_if_t gatts_if, esp_ble_g
     }
 }
 
+void GattsApplication::handleGattsEventCreateAttributeTable(
+    esp_gatt_if_t gatts_if,
+    esp_ble_gatts_cb_param_t* param)
+{
+    if (param->add_attr_tab.status != ESP_GATT_OK)
+    {
+        throw std::runtime_error("error creating the GATT attribute table");
+    }
+
+    if (param->add_attr_tab.num_handle != m_nextServiceForRegistration->service->attributeTable().length)
+    {
+        throw std::runtime_error("unexpected number of handles registered");
+    }
+
+    m_nextServiceForRegistration->service->pushHandles(param->add_attr_tab.handles);
+    if (esp_ble_gatts_start_service(param->add_attr_tab.handles[0]) != ESP_OK)
+    {
+        throw std::runtime_error("error starting the GATT service");
+    }
+
+    m_nextServiceForRegistration = m_nextServiceForRegistration->next;
+    ++m_nextServiceRegistrationNumber;
+
+    registerNextService(gatts_if);
+}
+
 void GattsApplication::handleGattsEventDisconnect(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param)
 {
     ESP_LOGI(
@@ -350,7 +379,8 @@ void GattsApplication::handleGattsEventRegister(esp_gatt_if_t gatts_if)
     }
     setConfigurationScanResponsePendingFlag();
 
-    // registerAttibuteTable(gatts_if);
+    m_nextServiceForRegistration = m_services;
+    registerNextService(gatts_if);
 }
 
 void GattsApplication::generateRawAdvertisementData(void)
@@ -452,7 +482,7 @@ void GattsApplication::generateRawScanResponseData(void)
     m_rawScanResponseData.payload = (uint8_t*) malloc(requiredLength * sizeof(uint8_t));
     if (!m_rawScanResponseData.payload)
     {
-        throw std::runtime_error("error allocating memory for the advertisment data");
+        throw std::runtime_error("error allocating memory for the scan response data");
     }
     m_rawScanResponseData.length = requiredLength;
 
@@ -468,6 +498,25 @@ void GattsApplication::generateRawScanResponseData(void)
     ++payloadPointer;
     memcpy(payloadPointer, &m_appearance, sizeof(m_appearance));
     payloadPointer += sizeof(m_appearance);
+}
+
+void GattsApplication::registerNextService(esp_gatt_if_t gatts_if)
+{
+    if (!m_nextServiceForRegistration)
+    {
+        ESP_LOGI(LOG_TAG, "Finished registering all services");
+        return;
+    }
+
+    auto attributeTable = m_nextServiceForRegistration->service->attributeTable();
+    if (esp_ble_gatts_create_attr_tab(
+            attributeTable.table,
+            gatts_if,
+            attributeTable.length,
+            m_nextServiceRegistrationNumber) != ESP_OK)
+    {
+        throw std::runtime_error("error registering the GATT attribute table");
+    }
 }
 
 void GattsApplication::setConfigurationAdvertisementPendingFlag(void)

@@ -4,6 +4,7 @@ idf_component_register(
     BleServer.cpp
     GattsApplication.cpp
     GattsService.cpp
+    GenericGattCharacteristic.cpp
     NonVolatileStorage.cpp
     INCLUDE_DIRS "."
 )
