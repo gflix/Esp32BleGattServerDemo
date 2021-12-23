@@ -16,25 +16,20 @@ namespace Esp32
 {
 
 static uint8_t rawAdvertisingData[] = {
-        /* flags */
-        0x02, 0x01, 0x06,
-        /* tx power*/
-        0x02, 0x0a, 0xeb,
-        /* service uuid */
-        0x03, 0x03, 0x1c, 0x18,
-        0x03, 0x19, 0x80, 0x02,
-        /* device name */
-        0x06, 0x09, 'E', 'S', 'P', '3', '2'
+    /* length:type:payload */
+    /* flags */
+    0x02, 0x01, 0x06,
+    /* service uuids */
+    0x05, 0x03, 0x00, 0x40, 0x00, 0x41,
+    /* device name */
+    0x06, 0x09, 'E', 'S', 'P', '3', '2'
 };
 
 static uint8_t rawScanResponseData[] = {
-        /* flags */
-        0x02, 0x01, 0x06,
-        /* tx power */
-        0x02, 0x0a, 0xeb,
-        /* service uuid */
-        0x03, 0x03, 0x1c, 0x18,
-        0x03, 0x19, 0x80, 0x02
+    /* flags */
+    0x02, 0x01, 0x06,
+    /* appearance */
+    0x03, 0x19, 0x80, 0x02
 };
 
 static esp_ble_adv_params_t advertisingParameters = {
@@ -255,7 +250,7 @@ void GenericGattsApplication::handleGattsEventCreateAttributeTable(
         throw std::runtime_error("error creating the GATT attribute table");
     }
 
-    startService(param);
+    startService(gatts_if, param);
 }
 
 void GenericGattsApplication::handleGattsEventDisconnect(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param)
