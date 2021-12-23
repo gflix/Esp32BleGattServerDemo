@@ -21,6 +21,9 @@ public:
     uint16_t permission(void) const;
     const char* description(void) const;
 
+    virtual void read(uint8_t* buffer, uint16_t* length);
+    virtual void write(const uint8_t* buffer, uint16_t length);
+
     void setHandleIndex(int handleIndex);
     int handleIndex(void) const;
 

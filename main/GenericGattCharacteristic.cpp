@@ -41,6 +41,16 @@ const char* GenericGattCharacteristic::description(void) const
     return m_description;
 }
 
+void GenericGattCharacteristic::read(uint8_t* buffer, uint16_t* length)
+{
+    throw std::runtime_error("reading from characteristic not supported");
+}
+
+void GenericGattCharacteristic::write(const uint8_t* buffer, uint16_t length)
+{
+    throw std::runtime_error("writing to characteristic not supported");
+}
+
 void GenericGattCharacteristic::setHandleIndex(int handleIndex)
 {
     m_handleIndex = handleIndex;

@@ -4,8 +4,8 @@
 #include "BleServer.hpp"
 #include "GattsApplication.hpp"
 #include "GattsService.hpp"
-#include "GenericGattCharacteristic.hpp"
 #include "NonVolatileStorage.hpp"
+#include "UInt16GattCharacteristic.hpp"
 
 #define LOG_TAG "Main"
 
@@ -21,9 +21,9 @@ static Esp32::GattsApplication gattsApplication(
 static Esp32::GattsService gattsServiceA(0x4000);
 static Esp32::GattsService gattsServiceB(0x4100);
 
-static Esp32::GenericGattCharacteristic characteristicA1(0x4010, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE, "Foo");
-static Esp32::GenericGattCharacteristic characteristicA2(0x4020, ESP_GATT_PERM_READ, "Bar");
-static Esp32::GenericGattCharacteristic characteristicB(0x4110, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE, "Blubb");
+static Esp32::UInt16GattCharacteristic characteristicA1(0x4010, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE, "Foo", 0x4142);
+static Esp32::UInt16GattCharacteristic characteristicA2(0x4020, ESP_GATT_PERM_READ, "Bar", 0x3132);
+static Esp32::UInt16GattCharacteristic characteristicB(0x4110, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE, "Blubb", 0x6162);
 
 extern "C" {
 

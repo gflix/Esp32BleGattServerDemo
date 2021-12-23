@@ -76,18 +76,12 @@ void GattsService::addCharacteristic(GenericGattCharacteristic* characteristic)
 
 void GattsService::readCharacteristic(uint16_t handle, uint8_t* buffer, uint16_t* length)
 {
-    auto characteristic = getCharacteristicForHandle(handle);
-
-    ESP_LOGI(LOG_TAG, "reading from characteristic %04x", characteristic->characteristicId());
+    getCharacteristicForHandle(handle)->read(buffer, length);
 }
 
 void GattsService::writeCharacteristic(uint16_t handle, const uint8_t* buffer, uint16_t length)
 {
-    auto characteristic = getCharacteristicForHandle(handle);
-
-    ESP_LOGI(LOG_TAG, "writing to characteristic %04x", characteristic->characteristicId());
-
-    throw std::runtime_error("not yet implemented");
+    getCharacteristicForHandle(handle)->write(buffer, length);
 }
 
 void GattsService::pushHandles(const uint16_t* handles)
