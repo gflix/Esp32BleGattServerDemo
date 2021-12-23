@@ -20,7 +20,8 @@ static void gattsEventCallbackWrapper(
     esp_gatt_if_t gatts_if,
     esp_ble_gatts_cb_param_t* param);
 
-BleServer::BleServer()
+BleServer::BleServer():
+    m_gattsApplication(nullptr)
 {
 }
 
@@ -74,7 +75,7 @@ void BleServer::probe(void)
     }
 }
 
-void BleServer::setGattsApplication(GenericGattsApplication* gattsApplication)
+void BleServer::setGattsApplication(GattsApplication* gattsApplication)
 {
     m_gattsApplication = gattsApplication;
     if (!m_gattsApplication)
@@ -95,7 +96,6 @@ void BleServer::gapEventCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_pa
         throw std::runtime_error("no GATTS application registered");
     }
     m_gattsApplication->gapEventCallback(event, param);
-
 }
 
 void BleServer::gattsEventCallback(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param)
