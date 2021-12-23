@@ -78,6 +78,7 @@ protected:
     void handleGattsEventMtu(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
     void handleGattsEventRead(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
     void handleGattsEventRegister(esp_gatt_if_t gatts_if);
+    void handleGattsEventWrite(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
 
     void generateRawAdvertisementData(void);
     void generateRawScanResponseData(void);

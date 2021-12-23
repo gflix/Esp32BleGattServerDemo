@@ -183,9 +183,9 @@ void GattsApplication::gattsEventCallback(
         case ESP_GATTS_READ_EVT:
             handleGattsEventRead(gatts_if, param);
             break;
-        // case ESP_GATTS_WRITE_EVT:
-        //     handleGattsEventWrite(gatts_if, param);
-        //     break;
+        case ESP_GATTS_WRITE_EVT:
+            handleGattsEventWrite(gatts_if, param);
+            break;
         case ESP_GATTS_MTU_EVT:
             handleGattsEventMtu(gatts_if, param);
             break;
@@ -432,6 +432,68 @@ void GattsApplication::handleGattsEventRegister(esp_gatt_if_t gatts_if)
 
     m_nextServiceForRegistration = m_services;
     registerNextService(gatts_if);
+}
+
+void GattsApplication::handleGattsEventWrite(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param)
+{
+    ESP_LOGI(
+        LOG_TAG,
+        "WRITE is_prep=%d, need_rsp=%d, handle=%04x",
+        param->write.is_prep,
+        (int)param->write.need_rsp,
+        param->write.handle);
+
+    if (!param->write.is_prep)
+    {
+
+        try
+        {
+            auto servicePointer = m_services;
+            while (servicePointer)
+            {
+                if (servicePointer->service->hasHandle(param->write.handle))
+                {
+                    servicePointer->service->writeCharacteristic(
+                        param->write.handle,
+                        param->write.value,
+                        param->write.len);
+
+                    if (param->write.need_rsp)
+                    {
+                        esp_ble_gatts_send_response(
+                            gatts_if,
+                            param->write.conn_id,
+                            param->write.trans_id,
+                            ESP_GATT_OK,
+                            nullptr);
+                    }
+                    break;
+                }
+
+                servicePointer = servicePointer->next;
+            }
+            if (!servicePointer)
+            {
+                ESP_LOGW(LOG_TAG, "Could not find suitable service for handle %04x", param->write.handle);
+                esp_ble_gatts_send_response(
+                    gatts_if,
+                    param->write.conn_id,
+                    param->write.trans_id,
+                    ESP_GATT_INVALID_HANDLE,
+                    nullptr);
+            }
+        }
+        catch(const std::exception& e)
+        {
+            ESP_LOGW(LOG_TAG, "Could not respond to write request: %s", e.what());
+            esp_ble_gatts_send_response(
+                gatts_if,
+                param->write.conn_id,
+                param->write.trans_id,
+                ESP_GATT_INTERNAL_ERROR,
+                nullptr);
+        }
+    }
 }
 
 void GattsApplication::generateRawAdvertisementData(void)
