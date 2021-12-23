@@ -3,6 +3,7 @@
 
 #include <esp_gap_ble_api.h>
 #include <esp_gatts_api.h>
+#include "GattsService.hpp"
 
 #define GATTS_APPLICATION_DEFAULT_APPEARANCE (0x0000)
 
@@ -22,6 +23,14 @@ public:
         void dump(void) const;
     };
 
+    struct ServiceList
+    {
+        ServiceList(GattsService* service);
+
+        GattsService* service;
+        ServiceList* next;
+    };
+
     GattsApplication(
         uint16_t applicationId,
         const char* shortDeviceName,
@@ -30,6 +39,9 @@ public:
     virtual ~GattsApplication();
 
     uint16_t applicationId(void) const;
+
+    void addService(GattsService* service);
+    int numberOfServices(void) const;
 
     void gapEventCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t* param);
     void gattsEventCallback(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
@@ -43,6 +55,8 @@ protected:
     const char* m_shortDeviceName;
     const char* m_fullDeviceName;
     uint16_t m_appearance;
+
+    ServiceList* m_services;
 
     uint8_t m_configurationDone;
     esp_gatt_if_t m_interface;

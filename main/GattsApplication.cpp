@@ -63,6 +63,12 @@ void GattsApplication::AdvertisementData::dump(void) const
     ESP_LOGI(LOG_TAG, "dump(%s)", buffer);
 }
 
+GattsApplication::ServiceList::ServiceList(GattsService* service):
+    service(service),
+    next(nullptr)
+{
+}
+
 GattsApplication::GattsApplication(
     uint16_t applicationId,
     const char* shortDeviceName,
@@ -84,6 +90,41 @@ GattsApplication::~GattsApplication()
 uint16_t GattsApplication::applicationId(void) const
 {
     return m_applicationId;
+}
+
+void GattsApplication::addService(GattsService* service)
+{
+    if (!service)
+    {
+        throw std::invalid_argument("null pointer exception");
+    }
+
+    auto serviceListEntry = new ServiceList(service);
+    if (!m_services)
+    {
+        m_services = serviceListEntry;
+    }
+    else
+    {
+        auto servicePointer = m_services;
+        for(; servicePointer->next; servicePointer = servicePointer->next)
+        {
+        }
+        servicePointer->next = serviceListEntry;
+    }
+}
+
+int GattsApplication::numberOfServices(void) const
+{
+    int counter = 0;
+    auto servicePointer = m_services;
+    while (servicePointer)
+    {
+        ++counter;
+        servicePointer = servicePointer->next;
+    }
+
+    return counter;
 }
 
 void GattsApplication::gapEventCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t* param)
@@ -327,6 +368,12 @@ void GattsApplication::generateRawAdvertisementData(void)
     }
     requiredLength += 2 + strlen(m_shortDeviceName);
 
+    int serviceCount = numberOfServices();
+    if (serviceCount > 0)
+    {
+        requiredLength += 2 + 2 * serviceCount;
+    }
+
     if (requiredLength > ADVERTISEMENT_LENGTH_MAX)
     {
         char buffer[64];
@@ -346,16 +393,37 @@ void GattsApplication::generateRawAdvertisementData(void)
     }
     m_rawAdvertisementData.length = requiredLength;
 
+    // put advertisement flags
     auto payloadPointer = m_rawAdvertisementData.payload;
     memcpy(payloadPointer, advertisementFlags, sizeof(advertisementFlags));
     payloadPointer += sizeof(advertisementFlags);
 
+    // put short device name
     *payloadPointer = strlen(m_shortDeviceName) + 1;
     ++payloadPointer;
     *payloadPointer = 0x09;
     ++payloadPointer;
     memcpy(payloadPointer, m_shortDeviceName, strlen(m_shortDeviceName));
     payloadPointer += strlen(m_shortDeviceName);
+
+    // put services
+    if (serviceCount > 0)
+    {
+        *payloadPointer = 1 + 2 * serviceCount;
+        ++payloadPointer;
+        *payloadPointer = 0x03;
+        ++payloadPointer;
+
+        auto servicePointer = m_services;
+        while (servicePointer)
+        {
+            auto serviceId = servicePointer->service->serviceId();
+            memcpy(payloadPointer, &serviceId, sizeof(serviceId));
+            payloadPointer += sizeof(serviceId);
+
+            servicePointer = servicePointer->next;
+        }
+    }
 }
 
 void GattsApplication::generateRawScanResponseData(void)
@@ -388,10 +456,12 @@ void GattsApplication::generateRawScanResponseData(void)
     }
     m_rawScanResponseData.length = requiredLength;
 
+    // put advertisement flags
     auto payloadPointer = m_rawScanResponseData.payload;
     memcpy(payloadPointer, advertisementFlags, sizeof(advertisementFlags));
     payloadPointer += sizeof(advertisementFlags);
 
+    // put appearance
     *payloadPointer = 3;
     ++payloadPointer;
     *payloadPointer = 0x19;

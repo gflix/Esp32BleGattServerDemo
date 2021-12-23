@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include "BleServer.hpp"
 #include "GattsApplication.hpp"
+#include "GattsService.hpp"
 #include "NonVolatileStorage.hpp"
 
 #define LOG_TAG "Main"
@@ -15,6 +16,7 @@ static Esp32::GattsApplication gattsApplication(
     "ESP32",
     "ESP32-GATT-Demo",
     GATTS_DEVICE_APPEARANCE);
+static Esp32::GattsService gattsServiceA(0x4000);
 
 extern "C" {
 
@@ -29,6 +31,8 @@ void app_main(void)
         ESP_LOGI(LOG_TAG, "NonVolatileStorage: probing done");
         Esp32::BleServer::instance()->probe();
         ESP_LOGI(LOG_TAG, "BleServer: probing done");
+
+        gattsApplication.addService(&gattsServiceA);
         Esp32::BleServer::instance()->setGattsApplication(&gattsApplication);
         ESP_LOGI(LOG_TAG, "BleServer: GATTS application successfully set");
     }
