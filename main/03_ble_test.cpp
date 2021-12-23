@@ -21,9 +21,9 @@ static Esp32::GattsApplication gattsApplication(
 static Esp32::GattsService gattsServiceA(0x4000);
 static Esp32::GattsService gattsServiceB(0x4100);
 
-static Esp32::GenericGattCharacteristic characteristicA1(0x4010);
-static Esp32::GenericGattCharacteristic characteristicA2(0x4020);
-static Esp32::GenericGattCharacteristic characteristicB(0x4110);
+static Esp32::GenericGattCharacteristic characteristicA1(0x4010, ESP_GATT_PERM_READ, "Foo");
+static Esp32::GenericGattCharacteristic characteristicA2(0x4020, ESP_GATT_PERM_READ, "Bar");
+static Esp32::GenericGattCharacteristic characteristicB(0x4110, ESP_GATT_PERM_READ, "Blubb");
 
 extern "C" {
 
