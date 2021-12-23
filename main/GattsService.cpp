@@ -74,14 +74,14 @@ void GattsService::addCharacteristic(GenericGattCharacteristic* characteristic)
     }
 }
 
-void GattsService::readCharacteristic(uint16_t handle, uint8_t* buffer, uint16_t length)
+void GattsService::readCharacteristic(uint16_t handle, uint8_t* buffer, uint16_t* length)
 {
     auto characteristic = getCharacteristicForHandle(handle);
 
     ESP_LOGI(LOG_TAG, "reading from characteristic %04x", characteristic->characteristicId());
 }
 
-void GattsService::writeCharacteristic(uint16_t handle, uint8_t* buffer, uint16_t length)
+void GattsService::writeCharacteristic(uint16_t handle, const uint8_t* buffer, uint16_t length)
 {
     auto characteristic = getCharacteristicForHandle(handle);
 

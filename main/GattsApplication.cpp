@@ -355,10 +355,7 @@ void GattsApplication::handleGattsEventRead(esp_gatt_if_t gatts_if, esp_ble_gatt
                     servicePointer->service->readCharacteristic(
                         param->read.handle,
                         response.attr_value.value,
-                        response.attr_value.len);
-
-                    response.attr_value.len = sizeof(m_dummyValue);
-                    memcpy(response.attr_value.value, &m_dummyValue, sizeof(m_dummyValue));
+                        &response.attr_value.len);
 
                     esp_ble_gatts_send_response(
                         gatts_if,

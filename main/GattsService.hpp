@@ -33,8 +33,8 @@ public:
     const AttributeTable& attributeTable(void);
 
     void addCharacteristic(GenericGattCharacteristic* characteristic);
-    void readCharacteristic(uint16_t handle, uint8_t* buffer, uint16_t length);
-    void writeCharacteristic(uint16_t handle, uint8_t* buffer, uint16_t length);
+    void readCharacteristic(uint16_t handle, uint8_t* buffer, uint16_t* length);
+    void writeCharacteristic(uint16_t handle, const uint8_t* buffer, uint16_t length);
     void pushHandles(const uint16_t* handles);
     bool hasHandle(uint16_t handle);
 

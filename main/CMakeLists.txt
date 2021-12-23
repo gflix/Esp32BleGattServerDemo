@@ -6,5 +6,6 @@ idf_component_register(
     GattsService.cpp
     GenericGattCharacteristic.cpp
     NonVolatileStorage.cpp
+    UInt16GattCharacteristic.cpp
     INCLUDE_DIRS "."
 )
