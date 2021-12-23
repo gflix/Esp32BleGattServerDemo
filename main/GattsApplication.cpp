@@ -148,7 +148,7 @@ void GattsApplication::gapEventCallback(esp_gap_ble_cb_event_t event, esp_ble_ga
             handleGapEventUpdatedConnectionParameters(param);
             break;
         default:
-            ESP_LOGI(LOG_TAG, "gapEventCallback(event=%d)", (int)event);
+            ESP_LOGW(LOG_TAG, "gapEventCallback(event=%d)", (int)event);
             throw std::runtime_error("not yet implemented");
     }
 }
@@ -205,7 +205,7 @@ void GattsApplication::gattsEventCallback(
             handleGattsEventCreateAttributeTable(gatts_if, param);
             break;
         default:
-            ESP_LOGI(LOG_TAG, "gattsEventCallback(event=%d,gatts_if=%d)", (int)event, (int)gatts_if);
+            ESP_LOGW(LOG_TAG, "gattsEventCallback(event=%d,gatts_if=%d)", (int)event, (int)gatts_if);
             throw std::runtime_error("not yet implemented");
     }
 }
@@ -242,7 +242,7 @@ void GattsApplication::handleGapEventAdvertisementStartComplete(esp_ble_gap_cb_p
 
 void GattsApplication::handleGapEventUpdatedConnectionParameters(esp_ble_gap_cb_param_t* param)
 {
-    ESP_LOGI(
+    ESP_LOGD(
         LOG_TAG,
         "UPDATED CONN PARAMS, status=%d, min_int=%d, max_int=%d, conn_int=%d, latency=%d, timeout=%d",
         param->update_conn_params.status,
@@ -333,12 +333,12 @@ void GattsApplication::handleGattsEventDisconnect(esp_gatt_if_t gatts_if, esp_bl
 
 void GattsApplication::handleGattsEventMtu(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param)
 {
-    ESP_LOGI(LOG_TAG, "MTU, conn_id=%d, mtu=%d", param->mtu.conn_id, param->mtu.mtu);
+    ESP_LOGD(LOG_TAG, "MTU, conn_id=%d, mtu=%d", param->mtu.conn_id, param->mtu.mtu);
 }
 
 void GattsApplication::handleGattsEventRead(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param)
 {
-    ESP_LOGI(LOG_TAG, "READ need_rsp=%d, handle=%04x", (int)param->read.need_rsp, param->read.handle);
+    ESP_LOGD(LOG_TAG, "READ need_rsp=%d, handle=%04x", (int)param->read.need_rsp, param->read.handle);
     if (param->read.need_rsp)
     {
         esp_gatt_rsp_t response;
@@ -433,7 +433,7 @@ void GattsApplication::handleGattsEventRegister(esp_gatt_if_t gatts_if)
 
 void GattsApplication::handleGattsEventWrite(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param)
 {
-    ESP_LOGI(
+    ESP_LOGD(
         LOG_TAG,
         "WRITE is_prep=%d, need_rsp=%d, handle=%04x",
         param->write.is_prep,
