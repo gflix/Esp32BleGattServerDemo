@@ -38,7 +38,7 @@ void GattsApplication::AdvertisementData::dump(void) const
     int writtenBytes;
     auto bufferPointer = buffer;
 
-    writtenBytes = snprintf(bufferPointer, remainingSize, "AD[");
+    writtenBytes = snprintf(bufferPointer, remainingSize, "AD[%2d: ", length);
 
     if (!payload)
     {
