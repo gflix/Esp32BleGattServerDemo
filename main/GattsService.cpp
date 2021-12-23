@@ -10,6 +10,7 @@ namespace Esp32
 
 const uint16_t GattsService::primaryServiceUuid = ESP_GATT_UUID_PRI_SERVICE;
 const uint16_t GattsService::characterDeclarationUuid = ESP_GATT_UUID_CHAR_DECLARE;
+const uint16_t GattsService::characterDescriptionUuid = ESP_GATT_UUID_CHAR_DESCRIPTION;
 const uint8_t GattsService::characteristicPropertyRead = ESP_GATT_CHAR_PROP_BIT_READ;
 
 GattsService::CharacteristicList::CharacteristicList(GenericGattCharacteristic* characteristic):
@@ -98,7 +99,9 @@ void GattsService::generateAttributeTable(void)
     auto characteristicPointer = m_characteristics;
     while (characteristicPointer)
     {
-        requiredLength += 2;  // TODO respect additional information, i.e. configuration byte, description
+        requiredLength +=
+            2 +
+            (characteristicPointer->characteristic->description() ? 1 : 0);
 
         characteristicPointer = characteristicPointer->next;
     }
@@ -148,6 +151,21 @@ void GattsService::generateAttributeTable(void)
             sizeof(m_dummyByte),
             (uint8_t*) &m_dummyByte
         };
+
+        auto description = characteristicPointer->characteristic->description();
+        if (description)
+        {
+            ++tablePointer;
+            tablePointer->attr_control = { ESP_GATT_AUTO_RSP };
+            tablePointer->att_desc = {
+                ESP_UUID_LEN_16,
+                (uint8_t *)&GattsService::characterDescriptionUuid,
+                ESP_GATT_PERM_READ,
+                (uint16_t)strlen(description),
+                (uint16_t)strlen(description),
+                (uint8_t*) description
+            };
+        }
 
         characteristicPointer = characteristicPointer->next;
     }

@@ -37,6 +37,7 @@ public:
 
     static const uint16_t primaryServiceUuid;
     static const uint16_t characterDeclarationUuid;
+    static const uint16_t characterDescriptionUuid;
     static const uint8_t characteristicPropertyRead;
 
 protected:
