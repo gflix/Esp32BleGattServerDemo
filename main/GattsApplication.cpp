@@ -20,6 +20,12 @@ esp_ble_adv_params_t GattsApplication::advertisingParameters = {
     .adv_filter_policy = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY,
 };
 
+GattsApplication::AdvertisementData::AdvertisementData(uint8_t* payload, size_t length):
+    payload(payload),
+    length(length)
+{
+}
+
 GattsApplication::GattsApplication(
     uint16_t applicationId,
     const char* deviceName,

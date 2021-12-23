@@ -12,6 +12,14 @@ namespace Esp32
 class GattsApplication
 {
 public:
+    struct AdvertisementData
+    {
+        AdvertisementData(uint8_t* payload = nullptr, size_t length = 0);
+
+        uint8_t* payload;
+        size_t length;
+    };
+
     GattsApplication(
         uint16_t applicationId,
         const char* deviceName = nullptr,
@@ -33,8 +41,8 @@ protected:
 
     uint8_t m_configurationDone;
     esp_gatt_if_t m_interface;
-    uint8_t* m_rawAdvertisementData;
-    uint8_t* m_rawScanResponseData;
+    AdvertisementData m_rawAdvertisementData;
+    AdvertisementData m_rawScanResponseData;
 
     void setConfigurationAdvertisingPendingFlag(void);
     void setConfigurationAdvertisingDoneFlag(void);
