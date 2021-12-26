@@ -2,6 +2,7 @@ idf_component_register(
     SRCS
     Esp32BleGattServerDemo.cpp
     BleServer.cpp
+    BleUuid.cpp
     GattsApplication.cpp
     GattsService.cpp
     GenericGattCharacteristic.cpp
