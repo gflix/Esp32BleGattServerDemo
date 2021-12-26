@@ -151,10 +151,25 @@ void GattsService::generateAttributeTable(void)
         ESP_UUID_LEN_16,
         (uint8_t *)&GattsService::primaryServiceUuid,
         ESP_GATT_PERM_READ,
-        sizeof(m_serviceId),
-        sizeof(m_serviceId),
-        (uint8_t*) &m_serviceId
+        0,
+        0,
+        nullptr
     };
+    switch (m_serviceId.width)
+    {
+        case BleUuid::Width::UUID_16:
+            tablePointer->att_desc.length = sizeof(m_serviceId.uuid16);
+            tablePointer->att_desc.max_length = sizeof(m_serviceId.uuid16);
+            tablePointer->att_desc.value = (uint8_t*) &m_serviceId.uuid16;
+            break;
+        case BleUuid::Width::UUID_32:
+            tablePointer->att_desc.length = sizeof(m_serviceId.uuid32);
+            tablePointer->att_desc.max_length = sizeof(m_serviceId.uuid32);
+            tablePointer->att_desc.value = (uint8_t*) &m_serviceId.uuid32;
+            break;
+        default:
+            throw std::runtime_error("UUID width is not supported");
+    }
 
     // put characteristic declarations
     characteristicPointer = m_characteristics;
