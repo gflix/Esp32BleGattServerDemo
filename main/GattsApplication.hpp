@@ -41,7 +41,7 @@ public:
     uint16_t applicationId(void) const;
 
     void addService(GattsService* service);
-    int numberOfServices(BleUuid::Width width) const;
+    int numberOfAdvertisedServices(BleUuid::Width width) const;
 
     void gapEventCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t* param);
     void gattsEventCallback(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
