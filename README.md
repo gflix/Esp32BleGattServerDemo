@@ -28,11 +28,40 @@ return values and give better information where errors are coming from.
 To initialize a BLE GATT server application the following steps needs to be performed:
 
 1. Initialize the non-volatile storage
+
+```cpp
+    NonVolatileStorage::instance()->probe();
+```
+
 2. Initialize the generic BLE server
+
+```cpp
+    BleServer::instance()->probe();
+```
+
 3. Initialize the characteristics
 4. Initialize the services and register the characteristics within the services
+
+```cpp
+    gattsServiceA.addCharacteristic(&characteristicA1);
+    gattsServiceA.addCharacteristic(&characteristicA2);
+    gattsServiceB.addCharacteristic(&characteristicB);
+    gattsServiceC.addCharacteristic(&characteristicC);
+```
+
 5. Initialize a GATT server application and register the services to the application
+
+```cpp
+    gattsApplication.addService(&gattsServiceA);
+    gattsApplication.addService(&gattsServiceB);
+    gattsApplication.addService(&gattsServiceC);
+```
+
 6. Register the GATT server application at the BLE server
+
+```cpp
+    BleServer::instance()->setGattsApplication(&gattsApplication);
+```
 
 After registering the GATT server application no characteristic and no service can be added to the application.
 The Bluetooth stack automatically starts the internal registration process and finally starts to advertise the
