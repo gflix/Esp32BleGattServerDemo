@@ -118,13 +118,16 @@ void GattsApplication::addService(GattsService* service)
     }
 }
 
-int GattsApplication::numberOfServices(void) const
+int GattsApplication::numberOfServices(BleUuid::Width width) const
 {
     int counter = 0;
     auto servicePointer = m_services;
     while (servicePointer)
     {
-        ++counter;
+        if (servicePointer->service->serviceId().width == width)
+        {
+            ++counter;
+        }
         servicePointer = servicePointer->next;
     }
 
@@ -508,10 +511,15 @@ void GattsApplication::generateRawAdvertisementData(void)
     }
     requiredLength += 2 + strlen(m_shortDeviceName);
 
-    int serviceCount = numberOfServices();
-    if (serviceCount > 0)
+    int uuid16ServiceCount = numberOfServices(BleUuid::Width::UUID_16);
+    if (uuid16ServiceCount > 0)
     {
-        requiredLength += 2 + 2 * serviceCount;
+        requiredLength += 2 + 2 * uuid16ServiceCount;
+    }
+    int uuid32ServiceCount = numberOfServices(BleUuid::Width::UUID_32);
+    if (uuid32ServiceCount > 0)
+    {
+        requiredLength += 2 + 4 * uuid32ServiceCount;
     }
 
     if (requiredLength > ADVERTISEMENT_LENGTH_MAX)
@@ -547,9 +555,9 @@ void GattsApplication::generateRawAdvertisementData(void)
     payloadPointer += strlen(m_shortDeviceName);
 
     // put services
-    if (serviceCount > 0)
+    if (uuid16ServiceCount > 0)
     {
-        *payloadPointer = 1 + 2 * serviceCount;
+        *payloadPointer = 1 + 2 * uuid16ServiceCount;
         ++payloadPointer;
         *payloadPointer = 0x03;
         ++payloadPointer;
@@ -557,9 +565,32 @@ void GattsApplication::generateRawAdvertisementData(void)
         auto servicePointer = m_services;
         while (servicePointer)
         {
-            auto serviceId = servicePointer->service->serviceId();
-            memcpy(payloadPointer, &serviceId, sizeof(serviceId));
-            payloadPointer += sizeof(serviceId);
+            auto& serviceId = servicePointer->service->serviceId();
+            if (serviceId.width == BleUuid::Width::UUID_16)
+            {
+                memcpy(payloadPointer, &serviceId.uuid16, sizeof(serviceId.uuid16));
+                payloadPointer += sizeof(serviceId.uuid16);
+            }
+
+            servicePointer = servicePointer->next;
+        }
+    }
+    if (uuid32ServiceCount > 0)
+    {
+        *payloadPointer = 1 + 4 * uuid32ServiceCount;
+        ++payloadPointer;
+        *payloadPointer = 0x05;
+        ++payloadPointer;
+
+        auto servicePointer = m_services;
+        while (servicePointer)
+        {
+            auto& serviceId = servicePointer->service->serviceId();
+            if (serviceId.width == BleUuid::Width::UUID_32)
+            {
+                memcpy(payloadPointer, &serviceId.uuid32, sizeof(serviceId.uuid32));
+                payloadPointer += sizeof(serviceId.uuid32);
+            }
 
             servicePointer = servicePointer->next;
         }

@@ -28,7 +28,7 @@ GattsService::AttributeTable::AttributeTable(esp_gatts_attr_db_t* table, size_t 
 {
 }
 
-GattsService::GattsService(uint16_t serviceId):
+GattsService::GattsService(const BleUuid& serviceId):
     m_serviceId(serviceId),
     m_characteristics(nullptr)
 {
@@ -38,7 +38,7 @@ GattsService::~GattsService()
 {
 }
 
-uint16_t GattsService::serviceId(void) const
+const BleUuid& GattsService::serviceId(void) const
 {
     return m_serviceId;
 }
@@ -176,14 +176,32 @@ void GattsService::generateAttributeTable(void)
 
         ++tablePointer;
         tablePointer->attr_control = { ESP_GATT_RSP_BY_APP };
+        auto& characteristicId = characteristicPointer->characteristic->characteristicId();
+
         tablePointer->att_desc = {
-            ESP_UUID_LEN_16,
-            (uint8_t *)&characteristicPointer->characteristic->characteristicId(),
+            0,
+            nullptr,
             permission,
-            sizeof(m_dummyByte),
-            sizeof(m_dummyByte),
-            (uint8_t*) &m_dummyByte
+            characteristicPointer->characteristic->length(),
+            characteristicPointer->characteristic->length(),
+            &m_dummyByte
         };
+
+        switch (characteristicId.width)
+        {
+            case BleUuid::Width::UUID_16:
+                tablePointer->att_desc.uuid_length = ESP_UUID_LEN_16;
+                tablePointer->att_desc.uuid_p =
+                    (uint8_t*) &characteristicPointer->characteristic->characteristicId().uuid16; // TODO try reference
+                break;
+            case BleUuid::Width::UUID_32:
+                tablePointer->att_desc.uuid_length = ESP_UUID_LEN_32;
+                tablePointer->att_desc.uuid_p =
+                    (uint8_t*) &characteristicPointer->characteristic->characteristicId().uuid32;
+                break;
+            default:
+                throw std::runtime_error("UUID width is not supported");
+        }
         characteristicPointer->characteristic->setHandleIndex(tablePointer - m_attributeTable.table);
 
         auto description = characteristicPointer->characteristic->description();

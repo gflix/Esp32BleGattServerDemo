@@ -5,7 +5,7 @@ namespace Esp32
 {
 
 GenericGattCharacteristic::GenericGattCharacteristic(
-    uint16_t characteristicId,
+    const BleUuid& characteristicId,
     uint16_t length,
     uint16_t permission,
     const char* description):
@@ -21,7 +21,7 @@ GenericGattCharacteristic::~GenericGattCharacteristic()
 {
 }
 
-const uint16_t& GenericGattCharacteristic::characteristicId(void) const
+const BleUuid& GenericGattCharacteristic::characteristicId(void) const
 {
     return m_characteristicId;
 }

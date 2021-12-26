@@ -2,6 +2,7 @@
 #define MAIN_GATTSSERVICE_HPP_
 
 #include <esp_gatts_api.h>
+#include "BleUuid.hpp"
 #include "GenericGattCharacteristic.hpp"
 
 namespace Esp32
@@ -26,10 +27,10 @@ public:
         size_t length;
     };
 
-    GattsService(uint16_t serviceId);
+    GattsService(const BleUuid& serviceId);
     virtual ~GattsService();
 
-    uint16_t serviceId(void) const;
+    const BleUuid& serviceId(void) const;
     const AttributeTable& attributeTable(void);
 
     void addCharacteristic(GenericGattCharacteristic* characteristic);
@@ -47,7 +48,7 @@ public:
 
 protected:
 
-    uint16_t m_serviceId;
+    BleUuid m_serviceId;
 
     CharacteristicList* m_characteristics;
     AttributeTable m_attributeTable;

@@ -2,6 +2,7 @@
 #define MAIN_GENERICGATTCHARACTERISTIC_HPP_
 
 #include <esp_gatts_api.h>
+#include "BleUuid.hpp"
 
 namespace Esp32
 {
@@ -10,13 +11,13 @@ class GenericGattCharacteristic
 {
 public:
     GenericGattCharacteristic(
-        uint16_t characteristicId,
+        const BleUuid& characteristicId,
         uint16_t length,
         uint16_t permission = ESP_GATT_PERM_READ,
         const char* description = nullptr);
     virtual ~GenericGattCharacteristic();
 
-    const uint16_t& characteristicId(void) const;
+    const BleUuid& characteristicId(void) const;
     uint16_t length(void) const;
     uint16_t permission(void) const;
     const char* description(void) const;
@@ -29,7 +30,7 @@ public:
 
 protected:
 
-    uint16_t m_characteristicId;
+    BleUuid m_characteristicId;
     uint16_t m_length;
     uint16_t m_permission;
     const char* m_description;
