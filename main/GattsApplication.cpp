@@ -118,13 +118,14 @@ void GattsApplication::addService(GattsService* service)
     }
 }
 
-int GattsApplication::numberOfServices(BleUuid::Width width) const
+int GattsApplication::numberOfAdvertisedServices(BleUuid::Width width) const
 {
     int counter = 0;
     auto servicePointer = m_services;
     while (servicePointer)
     {
-        if (servicePointer->service->serviceId().width == width)
+        auto& serviceId = servicePointer->service->serviceId();
+        if (serviceId.width == width && serviceId.advertise)
         {
             ++counter;
         }
@@ -511,12 +512,12 @@ void GattsApplication::generateRawAdvertisementData(void)
     }
     requiredLength += 2 + strlen(m_shortDeviceName);
 
-    int uuid16ServiceCount = numberOfServices(BleUuid::Width::UUID_16);
+    int uuid16ServiceCount = numberOfAdvertisedServices(BleUuid::Width::UUID_16);
     if (uuid16ServiceCount > 0)
     {
         requiredLength += 2 + 2 * uuid16ServiceCount;
     }
-    int uuid32ServiceCount = numberOfServices(BleUuid::Width::UUID_32);
+    int uuid32ServiceCount = numberOfAdvertisedServices(BleUuid::Width::UUID_32);
     if (uuid32ServiceCount > 0)
     {
         requiredLength += 2 + 4 * uuid32ServiceCount;
@@ -566,7 +567,7 @@ void GattsApplication::generateRawAdvertisementData(void)
         while (servicePointer)
         {
             auto& serviceId = servicePointer->service->serviceId();
-            if (serviceId.width == BleUuid::Width::UUID_16)
+            if (serviceId.width == BleUuid::Width::UUID_16 && serviceId.advertise)
             {
                 memcpy(payloadPointer, &serviceId.uuid16, sizeof(serviceId.uuid16));
                 payloadPointer += sizeof(serviceId.uuid16);
@@ -586,7 +587,7 @@ void GattsApplication::generateRawAdvertisementData(void)
         while (servicePointer)
         {
             auto& serviceId = servicePointer->service->serviceId();
-            if (serviceId.width == BleUuid::Width::UUID_32)
+            if (serviceId.width == BleUuid::Width::UUID_32 && serviceId.advertise)
             {
                 memcpy(payloadPointer, &serviceId.uuid32, sizeof(serviceId.uuid32));
                 payloadPointer += sizeof(serviceId.uuid32);

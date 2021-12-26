@@ -28,7 +28,7 @@ GattsService::AttributeTable::AttributeTable(esp_gatts_attr_db_t* table, size_t 
 {
 }
 
-GattsService::GattsService(const BleUuid& serviceId):
+GattsService::GattsService(const BleServiceUuid& serviceId):
     m_serviceId(serviceId),
     m_characteristics(nullptr)
 {
@@ -38,7 +38,7 @@ GattsService::~GattsService()
 {
 }
 
-const BleUuid& GattsService::serviceId(void) const
+const BleServiceUuid& GattsService::serviceId(void) const
 {
     return m_serviceId;
 }
