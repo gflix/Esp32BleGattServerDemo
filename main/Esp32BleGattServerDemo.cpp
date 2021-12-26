@@ -12,18 +12,32 @@
 #define GATTS_APPLICATION_ID (0x2104)
 #define GATTS_DEVICE_APPEARANCE (0x0280)
 
-static Esp32::GattsApplication gattsApplication(
+using namespace Esp32;
+
+static GattsApplication gattsApplication(
     GATTS_APPLICATION_ID,
     "ESP32",
     "ESP32-GATT-Demo",
     GATTS_DEVICE_APPEARANCE);
 
-static Esp32::GattsService gattsServiceA(0x4000);
-static Esp32::GattsService gattsServiceB(0x4100);
+static GattsService gattsServiceA(BleUuid(BleUuid::Width::UUID_32, 0x21040001));
+static GattsService gattsServiceB(BleUuid(BleUuid::Width::UUID_32, 0x21040002));
 
-static Esp32::UInt16GattCharacteristic characteristicA1(0x4010, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE, "Foo", 0x4142);
-static Esp32::UInt16GattCharacteristic characteristicA2(0x4020, ESP_GATT_PERM_READ, "Bar", 0x3132);
-static Esp32::UInt16GattCharacteristic characteristicB(0x4110, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE, "Blubb", 0x6162);
+static UInt16GattCharacteristic characteristicA1(
+    BleUuid(BleUuid::Width::UUID_32, 0x21041000),
+    ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+    "Foo",
+    0x4142);
+static UInt16GattCharacteristic characteristicA2(
+    BleUuid(BleUuid::Width::UUID_16, 0x4020),
+    ESP_GATT_PERM_READ,
+    "Bar",
+    0x3132);
+static UInt16GattCharacteristic characteristicB(
+    BleUuid(BleUuid::Width::UUID_16, 0x4110),
+    ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+    "Blubb",
+    0x6162);
 
 extern "C" {
 
@@ -34,9 +48,9 @@ void app_main(void)
 
     try
     {
-        Esp32::NonVolatileStorage::instance()->probe();
+        NonVolatileStorage::instance()->probe();
         ESP_LOGI(LOG_TAG, "NonVolatileStorage: probing done");
-        Esp32::BleServer::instance()->probe();
+        BleServer::instance()->probe();
         ESP_LOGI(LOG_TAG, "BleServer: probing done");
 
         gattsServiceA.addCharacteristic(&characteristicA1);
@@ -46,7 +60,7 @@ void app_main(void)
         gattsServiceB.addCharacteristic(&characteristicB);
         gattsApplication.addService(&gattsServiceB);
 
-        Esp32::BleServer::instance()->setGattsApplication(&gattsApplication);
+        BleServer::instance()->setGattsApplication(&gattsApplication);
         ESP_LOGI(LOG_TAG, "BleServer: GATTS application successfully set");
     }
     catch(const std::exception& e)

@@ -6,7 +6,7 @@ namespace Esp32
 {
 
 UInt16GattCharacteristic::UInt16GattCharacteristic(
-    uint16_t characteristicId,
+    const BleUuid& characteristicId,
     uint16_t permission,
     const char* description,
     uint16_t defaultValue):

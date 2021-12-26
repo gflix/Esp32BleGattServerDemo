@@ -10,7 +10,7 @@ class UInt16GattCharacteristic: public GenericGattCharacteristic
 {
 public:
     UInt16GattCharacteristic(
-        uint16_t characteristicId,
+        const BleUuid& characteristicId,
         uint16_t permission = ESP_GATT_PERM_READ,
         const char* description = nullptr,
         uint16_t defaultValue = 0);
