@@ -194,6 +194,11 @@ void GattsApplication::gattsEventCallback(
             break;
         case ESP_GATTS_START_EVT:
             ESP_LOGD(LOG_TAG, "GATTS event: service started");
+            m_nextServiceForRegistration = m_nextServiceForRegistration->next;
+            ++m_nextServiceRegistrationNumber;
+
+            registerNextService(gatts_if);
+
             break;
         case ESP_GATTS_CONNECT_EVT:
             handleGattsEventConnect(gatts_if, param);
@@ -303,11 +308,6 @@ void GattsApplication::handleGattsEventCreateAttributeTable(
     {
         throw std::runtime_error("error starting the GATT service");
     }
-
-    m_nextServiceForRegistration = m_nextServiceForRegistration->next;
-    ++m_nextServiceRegistrationNumber;
-
-    registerNextService(gatts_if);
 }
 
 void GattsApplication::handleGattsEventDisconnect(esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param)
