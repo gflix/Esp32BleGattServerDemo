@@ -20,8 +20,9 @@ static GattsApplication gattsApplication(
     "ESP32-GATT-Demo",
     GATTS_DEVICE_APPEARANCE);
 
-static GattsService gattsServiceA(BleUuid(BleUuid::Width::UUID_32, 0x21040001));
-static GattsService gattsServiceB(BleUuid(BleUuid::Width::UUID_32, 0x21040002));
+static GattsService gattsServiceA(BleServiceUuid(BleUuid::Width::UUID_32, 0x21040001));
+static GattsService gattsServiceB(BleServiceUuid(BleUuid::Width::UUID_32, 0x21040002, false));
+static GattsService gattsServiceC(BleServiceUuid(BleUuid::Width::UUID_32, 0x21040003));
 
 static UInt16GattCharacteristic characteristicA1(
     BleUuid(BleUuid::Width::UUID_32, 0x21041000),
@@ -36,8 +37,13 @@ static UInt16GattCharacteristic characteristicA2(
 static UInt16GattCharacteristic characteristicB(
     BleUuid(BleUuid::Width::UUID_16, 0x4110),
     ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
-    "Blubb",
+    "Baz",
     0x6162);
+static UInt16GattCharacteristic characteristicC(
+    BleUuid(BleUuid::Width::UUID_32, 0x21043000),
+    ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+    nullptr,
+    0x4f58);
 
 extern "C" {
 
@@ -59,6 +65,9 @@ void app_main(void)
 
         gattsServiceB.addCharacteristic(&characteristicB);
         gattsApplication.addService(&gattsServiceB);
+
+        gattsServiceC.addCharacteristic(&characteristicC);
+        gattsApplication.addService(&gattsServiceC);
 
         BleServer::instance()->setGattsApplication(&gattsApplication);
         ESP_LOGI(LOG_TAG, "BleServer: GATTS application successfully set");
