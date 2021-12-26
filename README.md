@@ -74,7 +74,7 @@ characteristics (i.e. the battery level service), see https://www.bluetooth.com/
 Whenever possible avoid to use custom 16 bit values when implementing custom services and characteristics to avoid
 unambiguities. Use 32 bit UUIDs for custom services and characteristics instead.
 
-### Avoid not define GATT server application, services and characteristics on the stack
+### Avoid to define GATT server application, services and characteristics on the stack
 
 A user may tend to define the GATT server application, the services and/or the characteristics within the app_main()
 method or any other method or task. Please be aware, that defining any variable within a method will define it on
