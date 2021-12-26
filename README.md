@@ -53,6 +53,8 @@ The framework currently has the following (known) restrictions:
 - Applications cannot be modified after initialization, thus dynamic changes of services and their characteristics
   are not supported
 - Manufacturer data is not yet supported
+- The framework needs to allocate memory on the heap to store the registered services and characteristics in linked
+  list; after initialization no dynamic memory handling is performed anymore
 
 ## Hints
 
