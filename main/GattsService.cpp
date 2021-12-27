@@ -30,7 +30,8 @@ GattsService::AttributeTable::AttributeTable(esp_gatts_attr_db_t* table, size_t 
 
 GattsService::GattsService(const BleServiceUuid& serviceId):
     m_serviceId(serviceId),
-    m_characteristics(nullptr)
+    m_characteristics(nullptr),
+    m_characteristicHandles(nullptr)
 {
 }
 
