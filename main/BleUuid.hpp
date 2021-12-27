@@ -8,7 +8,6 @@ namespace Esp32
 
 struct BleUuid
 {
-public:
     enum class Width
     {
         UUID_16,
