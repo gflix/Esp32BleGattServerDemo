@@ -8,7 +8,6 @@ namespace Esp32
 
 struct BleServiceUuid: public BleUuid
 {
-public:
     BleServiceUuid(
         Width width,
         uint32_t uuid,
